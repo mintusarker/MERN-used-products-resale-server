@@ -12,18 +12,25 @@ app.use(cors());
 app.use(express.json());
 
 
-
-
-
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.dl1tykd.mongodb.net/?retryWrites=true&w=majority`;
-console.log(uri)
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
-client.connect(err => {
-  const collection = client.db("test").collection("devices");
-  // perform actions on the collection object
-  client.close();
-});
 
+async function run() {
+    try {
+        const laptopCategoryCollection = client.db('usedLaptop').collection('itemCategory');
+
+        app.get('/itemCategory', async (req, res) => {
+            const query = {};
+            const result = await laptopCategoryCollection.find(query).toArray();
+            res.send(result)
+        })
+
+    }
+    finally {
+
+    }
+}
+run().catch(console.log)
 
 
 app.get('/', async (req, res) => {
