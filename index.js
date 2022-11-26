@@ -42,6 +42,7 @@ async function run() {
         const itemCollection = client.db('usedLaptop').collection('itemName');
         const bookingsCollection = client.db('usedLaptop').collection('bookings');
         const usersCollection = client.db('usedLaptop').collection('users');
+        const productsCollection = client.db('usedLaptop').collection('products');
 
         app.get('/itemCategory', async (req, res) => {
             const query = {};
@@ -63,6 +64,13 @@ async function run() {
             res.send(item)
 
         });
+
+
+        app.get('/itemCategory', async (req, res) => {
+            const query = {};
+            const result = await itemCollection.find(query).project({ name: 1 }).toArray();
+            res.send(result)
+        })
 
 
         app.get('/bookings', verifyJWT, async (req, res) => {
@@ -105,6 +113,18 @@ async function run() {
             const result = usersCollection.insertOne(user);
             res.send(result);
         });
+
+        app.get('/products', async (req, res) => {
+           const query = {};
+           const products = await productsCollection.find(query).toArray();
+           res.send(products)
+        })
+
+        app.post('/products', async (req, res) => {
+            const product = req.body;
+            const result = await productsCollection.insertOne(product);
+            res.send(result)
+        })
 
     }
     finally {
