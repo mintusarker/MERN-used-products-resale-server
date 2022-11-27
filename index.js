@@ -46,7 +46,7 @@ async function run() {
         const bookingsCollection = client.db('usedLaptop').collection('bookings');
         const usersCollection = client.db('usedLaptop').collection('users');
         const productsCollection = client.db('usedLaptop').collection('products');
-        // const paymentsCollection = client.db('usedLaptop').collection('payments');
+        const paymentsCollection = client.db('usedLaptop').collection('payments');
 
 
         app.get('/itemCategory', async (req, res) => {
@@ -105,6 +105,7 @@ async function run() {
             res.send(result);
         });
 
+        //payment 
         app.post('/create-payment-intent', async (req, res) => {
             const booking = req.body;
             console.log(booking)
@@ -124,20 +125,20 @@ async function run() {
         })
 
 
-        // app.post('/payments', async (req, res) => {
-        //     const payment = req.body;
-        //     const result = await paymentsCollection.insertOne(payment);
-        //     const id = payment.bookingId;
-        //     const filter = { _id: ObjectId(id) };
-        //     const updatedDoc = {
-        //         $set: {
-        //             paid: true,
-        //             transactionId: payment.transactionId
-        //         }
-        //     }
-        //     const updatedResult = await bookingsCollection.updateOne(filter, updatedDoc);
-        //     res.send(result);
-        // })
+        app.post('/payments', async (req, res) => {
+            const payment = req.body;
+            const result = await paymentsCollection.insertOne(payment);
+            const id = payment.bookingId;
+            const filter = { _id: ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    paid: true,
+                    transactionId: payment.transactionId
+                }
+            }
+            const updatedResult = await bookingsCollection.updateOne(filter, updatedDoc);
+            res.send(result);
+        })
 
         //JWT TOKEN
         app.get('/jwt', async (req, res) => {
@@ -154,20 +155,27 @@ async function run() {
 
 
         //all users
-
         app.get('/users', async (req, res) => {
             const query = {};
             const users = await usersCollection.find(query).toArray();
             res.send(users)
+        });
+
+
+        app.get('/users/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
+            const user = await usersCollection.findOne(query);
+            res.send({ isAdmin: user?.role === 'admin' })
         })
 
-        // //all users
-        // app.get('/user/:email', async (req, res) => {
-        //     const email = req.params.email;
-        //     // const query = {option: email}
-        //     const options = await usersCollection.findOne(email ===  'Seller Account')
-        //     res.send(options)
-        // })
+        //users Account variant
+        app.get('/user', async (req, res) => {
+            const option = req.params.option;
+            // const query = {option: email}
+            const options = await usersCollection.find(option ===  'Seller Account').toArray()
+            res.send(options)
+        })
 
         // save user 
         app.post('/users', async (req, res) => {
@@ -178,15 +186,23 @@ async function run() {
         });
 
         //delete
-        app.delete('/users/:id', async(req, res) => {
+        app.delete('/users/:id', async (req, res) => {
             const id = req.params.id;
-            const filter = {_id: ObjectId(id)};
+            const filter = { _id: ObjectId(id) };
             const result = await usersCollection.deleteOne(filter);
             res.send(result);
         })
 
         //make admin
-        app.put('/users/admin/:id', async (req, res) => {
+        app.put('/users/admin/:id', verifyJWT, async (req, res) => {
+            const decodedEmail = req.decoded.email;
+            const query = { email: decodedEmail };
+            const user = await usersCollection.findOne(query);
+
+            if (user.role !== 'admin') {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+
             const id = req.params.id;
             const filter = { _id: ObjectId(id) }
             const options = { upsert: true };
