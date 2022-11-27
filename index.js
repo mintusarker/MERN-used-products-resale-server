@@ -86,6 +86,14 @@ async function run() {
             res.send(bookings);
         });
 
+
+        app.get('/bookings/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id)};
+            const booking = await bookingsCollection.findOne(query);
+            res.send(booking);
+        })
+
         app.post('/bookings', async (req, res) => {
             const booking = req.body;
             console.log(booking);
@@ -114,17 +122,28 @@ async function run() {
             res.send(result);
         });
 
+        // my product
         app.get('/products', async (req, res) => {
-           const query = {};
-           const products = await productsCollection.find(query).toArray();
-           res.send(products)
-        })
+            const query = {};
+            const products = await productsCollection.find(query).toArray();
+            res.send(products)
+        });
 
         app.post('/products', async (req, res) => {
             const product = req.body;
             const result = await productsCollection.insertOne(product);
             res.send(result)
-        })
+        });
+
+
+        //product delete API
+        app.delete('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = await productsCollection.deleteOne(filter);
+            res.send(result);
+        });
+
 
     }
     finally {
