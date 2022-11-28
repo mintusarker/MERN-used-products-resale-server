@@ -47,6 +47,7 @@ async function run() {
         const usersCollection = client.db('usedLaptop').collection('users');
         const productsCollection = client.db('usedLaptop').collection('products');
         const paymentsCollection = client.db('usedLaptop').collection('payments');
+        const advertiseCollection = client.db('usedLaptop').collection('advertise');
 
 
         app.get('/itemCategory', async (req, res) => {
@@ -173,7 +174,7 @@ async function run() {
         app.get('/user', async (req, res) => {
             const option = req.params.option;
             // const query = {option: email}
-            const options = await usersCollection.find(option ===  'Seller Account').toArray()
+            const options = await usersCollection.find(option === 'Seller Account').toArray()
             res.send(options)
         })
 
@@ -236,6 +237,20 @@ async function run() {
             const result = await productsCollection.deleteOne(filter);
             res.send(result);
         });
+
+        // advertise
+        app.post('/advertise', async (req, res) => {
+            const advertise = req.body;
+            console.log(advertise)
+            const result = await advertiseCollection.insertOne(advertise)
+            res.send(result)
+        });
+
+        app.get('/advertise', async (req, res) => {
+             const query = {}
+             const result = await advertiseCollection.find(query).toArray();
+             res.send(result)
+        })
 
 
     }
