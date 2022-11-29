@@ -161,6 +161,7 @@ async function run() {
             res.send(users)
         });
 
+        //get admin email
 
         app.get('/users/admin/:email', async (req, res) => {
             const email = req.params.email;
@@ -173,7 +174,7 @@ async function run() {
         app.get('/user/buyers', async (req, res) => {
             const option = {}
             // const query = { option }
-            const options = await usersCollection.find({option: "Buyers Account"}).toArray();
+            const options = await usersCollection.find({ option: "Buyers Account" }).toArray();
             res.send(options);
         })
 
@@ -187,15 +188,45 @@ async function run() {
         app.get('/user/sellers', async (req, res) => {
             const option = {}
             // const query = { option }
-            const options = await usersCollection.find({option: "Seller Account"}).toArray();
+            const options = await usersCollection.find({ option: "Seller Account" }).toArray();
             res.send(options);
         });
 
-        app.delete('/user/sellers/:id', verifyJWT, async(req, res)=>{
+        app.delete('/user/sellers/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
-            const filter = {_id: ObjectId(id)};
+            const filter = { _id: ObjectId(id) };
             const options = await usersCollection.deleteOne(filter);
             res.send(options)
+        });
+
+        //status update
+        app.patch('/user/sellers/:id', async (req, res) => {
+            const id = req.params.id;
+            const status = req.body.status;
+            const query = { _id: ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    status: status
+                }
+            }
+            const result = await usersCollection.updateOne(query, updatedDoc);
+            res.send(result)
+        });
+
+        //get seller email
+        app.get('/user/sellers/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
+            const user = await usersCollection.findOne(query);
+            res.send({ isSeller: user?.option === 'Seller Account' });
+        });
+
+        //get buyer email
+        app.get('/user/buyers/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
+            const user = await usersCollection.findOne(query);
+            res.send({ isBuyer: user?.option === 'Buyers Account' });
         })
 
         // save user 
