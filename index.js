@@ -71,7 +71,6 @@ async function run() {
 
         });
 
-
         app.get('/itemCategory', async (req, res) => {
             const query = {};
             const result = await itemCollection.find(query).project({ name: 1 }).toArray();
@@ -171,10 +170,31 @@ async function run() {
         })
 
         //users Account variant
-        app.get('/user', async (req, res) => {
-            const option = req.params.option;
-            // const query = {option: email}
-            const options = await usersCollection.find(option === 'Seller Account').toArray()
+        app.get('/user/buyers', async (req, res) => {
+            const option = {}
+            // const query = { option }
+            const options = await usersCollection.find({option: "Buyers Account"}).toArray();
+            res.send(options);
+        })
+
+        app.delete('/user/buyers/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const options = await usersCollection.deleteOne(filter);
+            res.send(options);
+        });
+
+        app.get('/user/sellers', async (req, res) => {
+            const option = {}
+            // const query = { option }
+            const options = await usersCollection.find({option: "Seller Account"}).toArray();
+            res.send(options);
+        });
+
+        app.delete('/user/sellers/:id', verifyJWT, async(req, res)=>{
+            const id = req.params.id;
+            const filter = {_id: ObjectId(id)};
+            const options = await usersCollection.deleteOne(filter);
             res.send(options)
         })
 
@@ -247,11 +267,17 @@ async function run() {
         });
 
         app.get('/advertise', async (req, res) => {
-             const query = {}
-             const result = await advertiseCollection.find(query).toArray();
-             res.send(result)
+            const query = {}
+            const result = await advertiseCollection.find(query).toArray();
+            res.send(result)
         })
 
+        app.delete('/advertise/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = await advertiseCollection.deleteOne(filter);
+            res.send(result);
+        });
 
     }
     finally {
