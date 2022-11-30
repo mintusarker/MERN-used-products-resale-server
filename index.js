@@ -48,6 +48,7 @@ async function run() {
         const productsCollection = client.db('usedLaptop').collection('products');
         const paymentsCollection = client.db('usedLaptop').collection('payments');
         const advertiseCollection = client.db('usedLaptop').collection('advertise');
+        const reportCollection = client.db('usedLaptop').collection('report');
 
 
         app.get('/itemCategory', async (req, res) => {
@@ -80,11 +81,11 @@ async function run() {
 
         app.get('/bookings', verifyJWT, async (req, res) => {
             const email = req.query.email;
-            // const decodedEmail = req.decoded.email;
+            const decodedEmail = req.decoded.email;
 
-            // if (email !== decodedEmail) {
-            //     return res.status(403).send({ message: 'forbidden access' })
-            // }
+            if (email !== decodedEmail) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
             const query = { email: email }
             const bookings = await bookingsCollection.find(query).toArray();
             res.send(bookings);
@@ -229,7 +230,7 @@ async function run() {
             res.send({ isBuyer: user?.option === 'Buyers Account' });
         })
 
-        // save user 
+       // save user 
         app.post('/users', async (req, res) => {
             const user = req.body;
             console.log(user)
@@ -245,27 +246,27 @@ async function run() {
             res.send(result);
         })
 
-        //make admin
-        app.put('/users/admin/:id', verifyJWT, async (req, res) => {
-            const decodedEmail = req.decoded.email;
-            const query = { email: decodedEmail };
-            const user = await usersCollection.findOne(query);
+        // //make admin
+        // app.put('/users/admin/:id', verifyJWT, async (req, res) => {
+        //     const decodedEmail = req.decoded.email;
+        //     const query = { email: decodedEmail };
+        //     const user = await usersCollection.findOne(query);
 
-            if (user.role !== 'admin') {
-                return res.status(403).send({ message: 'forbidden access' })
-            }
+        //     if (user.role !== 'admin') {
+        //         return res.status(403).send({ message: 'forbidden access' })
+        //     }
 
-            const id = req.params.id;
-            const filter = { _id: ObjectId(id) }
-            const options = { upsert: true };
-            const updatedDoc = {
-                $set: {
-                    role: 'admin'
-                }
-            }
-            const result = await usersCollection.updateOne(filter, updatedDoc, options);
-            res.send(result);
-        })
+        //     const id = req.params.id;
+        //     const filter = { _id: ObjectId(id) }
+        //     const options = { upsert: true };
+        //     const updatedDoc = {
+        //         $set: {
+        //             role: 'admin'
+        //         }
+        //     }
+        //     const result = await usersCollection.updateOne(filter, updatedDoc, options);
+        //     res.send(result);
+        // })
 
         // my product
         app.get('/products', async (req, res) => {
@@ -301,12 +302,33 @@ async function run() {
             const query = {}
             const result = await advertiseCollection.find(query).toArray();
             res.send(result)
-        })
+        });
 
         app.delete('/advertise/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) };
             const result = await advertiseCollection.deleteOne(filter);
+            res.send(result);
+        });
+
+        //report to admin
+        app.get('/report', async (req, res) => {
+            const query = {}
+            const result = await reportCollection.find(query).toArray();
+            res.send(result);
+        });
+
+
+        app.post('/report', async (req, res) => {
+            const report = req.body;
+            const result = await reportCollection.insertOne(report);
+            res.send(result);
+        });
+
+        app.delete('/report/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = await reportCollection.deleteOne(filter);
             res.send(result);
         });
 
