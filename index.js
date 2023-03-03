@@ -79,13 +79,12 @@ async function run() {
         })
 
 
-        app.get('/bookings', verifyJWT, async (req, res) => {
+        app.get('/bookings', async (req, res) => {
             const email = req.query.email;
-            const decodedEmail = req.decoded.email;
-
-            if (email !== decodedEmail) {
-                return res.status(403).send({ message: 'forbidden access' })
-            }
+            // const decodedEmail = req.decoded.email;
+            // if (email !== decodedEmail) {
+            //     return res.status(403).send({ message: 'forbidden access' })
+            // }
             const query = { email: email }
             const bookings = await bookingsCollection.find(query).toArray();
             res.send(bookings);
@@ -155,15 +154,7 @@ async function run() {
         })
 
 
-        //all users
-        app.get('/users', async (req, res) => {
-            const query = {};
-            const users = await usersCollection.find(query).toArray();
-            res.send(users)
-        });
-
         //get admin email
-
         app.get('/users/admin/:email', async (req, res) => {
             const email = req.params.email;
             const query = { email }
@@ -179,7 +170,7 @@ async function run() {
             res.send(options);
         })
 
-        app.delete('/user/buyers/:id', verifyJWT, async (req, res) => {
+        app.delete('/user/buyers/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) };
             const options = await usersCollection.deleteOne(filter);
@@ -193,7 +184,7 @@ async function run() {
             res.send(options);
         });
 
-        app.delete('/user/sellers/:id', verifyJWT, async (req, res) => {
+        app.delete('/user/sellers/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) };
             const options = await usersCollection.deleteOne(filter);
@@ -230,12 +221,42 @@ async function run() {
             res.send({ isBuyer: user?.option === 'Buyers Account' });
         })
 
-       // save user 
-        app.post('/users', async (req, res) => {
+        // save user 
+        // app.post('/users', async (req, res) => {
+        //     const user = req.body;
+        //     console.log(user)
+        //     const result = usersCollection.insertOne(user);
+        //     res.send(result);
+        // });
+
+
+        // save user 
+        app.put("/users", async (req, res) => {
             const user = req.body;
-            console.log(user)
-            const result = usersCollection.insertOne(user);
+            console.log(user);
+            const email = user.email;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const obj = {
+              email: user.email,
+              name: user.name,
+              option: user.option,
+            };
+            const updateDoc = { $set: obj };
+            const result = await usersCollection.updateOne(
+              filter,
+              updateDoc,
+              options
+            );
             res.send(result);
+          });
+       
+
+        //all users
+        app.get('/users', async (req, res) => {
+            const query = {};
+            const users = await usersCollection.find(query).toArray();
+            res.send(users)
         });
 
         //delete
@@ -246,27 +267,27 @@ async function run() {
             res.send(result);
         })
 
-        // //make admin
-        // app.put('/users/admin/:id', verifyJWT, async (req, res) => {
-        //     const decodedEmail = req.decoded.email;
-        //     const query = { email: decodedEmail };
-        //     const user = await usersCollection.findOne(query);
+        //make admin
+        app.put('/users/admin/:id', verifyJWT, async (req, res) => {
+            const decodedEmail = req.decoded.email;
+            const query = { email: decodedEmail };
+            const user = await usersCollection.findOne(query);
 
-        //     if (user.role !== 'admin') {
-        //         return res.status(403).send({ message: 'forbidden access' })
-        //     }
+            if (user.role !== 'admin') {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
 
-        //     const id = req.params.id;
-        //     const filter = { _id: ObjectId(id) }
-        //     const options = { upsert: true };
-        //     const updatedDoc = {
-        //         $set: {
-        //             role: 'admin'
-        //         }
-        //     }
-        //     const result = await usersCollection.updateOne(filter, updatedDoc, options);
-        //     res.send(result);
-        // })
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    role: 'admin'
+                }
+            }
+            const result = await usersCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        })
 
         // my product
         app.get('/products', async (req, res) => {
