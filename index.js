@@ -45,10 +45,23 @@ async function run() {
         const itemCollection = client.db('usedLaptop').collection('itemName');
         const bookingsCollection = client.db('usedLaptop').collection('bookings');
         const usersCollection = client.db('usedLaptop').collection('users');
-        const productsCollection = client.db('usedLaptop').collection('products');
+        // const productsCollection = client.db('usedLaptop').collection('products');
         const paymentsCollection = client.db('usedLaptop').collection('payments');
         const advertiseCollection = client.db('usedLaptop').collection('advertise');
         const reportCollection = client.db('usedLaptop').collection('report');
+
+        //verify admin 
+        // make sure you use verifyAdmin after verifyJWT
+        const verifyAdmin = async (req, res, next) => {
+            const decodedEmail = req.decoded.email;
+            const query = { email: decodedEmail };
+            const user = await usersCollection.findOne(query);
+
+            if (user?.role !== 'admin') {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            next();
+        }
 
 
         app.get('/itemCategory', async (req, res) => {
@@ -62,6 +75,19 @@ async function run() {
             // const query = {_id: id}
             const data = await itemCollection.find(id).toArray()
             res.send(data)
+        });
+
+        app.post('/itemName', async (req, res) => {
+            const item = req.body;
+            const result = await itemCollection.insertOne(item);
+            res.send(result)
+        });
+
+        app.delete('/itemName/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = await itemCollection.deleteOne(filter);
+            res.send(result);
         });
 
         app.get('/itemName/:id', async (req, res) => {
@@ -105,7 +131,14 @@ async function run() {
             res.send(result);
         });
 
-        //payment 
+        app.delete('/bookings/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = bookingsCollection.deleteOne(filter);
+            res.send(result);
+        })
+
+        //payment in stripe 
         app.post('/create-payment-intent', async (req, res) => {
             const booking = req.body;
             console.log(booking)
@@ -238,19 +271,19 @@ async function run() {
             const filter = { email: email };
             const options = { upsert: true };
             const obj = {
-              email: user.email,
-              name: user.name,
-              option: user.option,
+                email: user.email,
+                name: user.name,
+                option: user.option,
             };
             const updateDoc = { $set: obj };
             const result = await usersCollection.updateOne(
-              filter,
-              updateDoc,
-              options
+                filter,
+                updateDoc,
+                options
             );
             res.send(result);
-          });
-       
+        });
+
 
         //all users
         app.get('/users', async (req, res) => {
@@ -268,15 +301,7 @@ async function run() {
         })
 
         //make admin
-        app.put('/users/admin/:id', verifyJWT, async (req, res) => {
-            const decodedEmail = req.decoded.email;
-            const query = { email: decodedEmail };
-            const user = await usersCollection.findOne(query);
-
-            if (user.role !== 'admin') {
-                return res.status(403).send({ message: 'forbidden access' })
-            }
-
+        app.put('/users/admin/:id', verifyJWT, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) }
             const options = { upsert: true };
@@ -289,27 +314,27 @@ async function run() {
             res.send(result);
         })
 
-        // my product
-        app.get('/products', async (req, res) => {
-            const query = {};
-            const products = await productsCollection.find(query).toArray();
-            res.send(products)
-        });
+        // // my product
+        // app.get('/products', async (req, res) => {
+        //     const query = {};
+        //     const products = await productsCollection.find(query).toArray();
+        //     res.send(products)
+        // });
 
-        app.post('/products', async (req, res) => {
-            const product = req.body;
-            const result = await productsCollection.insertOne(product);
-            res.send(result)
-        });
+        // app.post('/products', async (req, res) => {
+        //     const product = req.body;
+        //     const result = await productsCollection.insertOne(product);
+        //     res.send(result)
+        // });
 
 
-        //product delete API
-        app.delete('/products/:id', async (req, res) => {
-            const id = req.params.id;
-            const filter = { _id: ObjectId(id) };
-            const result = await productsCollection.deleteOne(filter);
-            res.send(result);
-        });
+        // //product delete API
+        // app.delete('/products/:id', async (req, res) => {
+        //     const id = req.params.id;
+        //     const filter = { _id: ObjectId(id) };
+        //     const result = await productsCollection.deleteOne(filter);
+        //     res.send(result);
+        // });
 
         // advertise
         app.post('/advertise', async (req, res) => {
