@@ -75,7 +75,22 @@ async function run() {
             const query = {};
             const result = await itemCollection.find(query).project({ name: 1 }).toArray();
             res.send(result)
-        })
+        });
+        
+
+         //search Api
+        //  app.get("/search/:key", async (req, res) => {
+        //     let result = await laptopCategoryCollection.find(
+        //         {
+        //             "$or": [
+        //                 {
+        //                     name: { $regex: req.params.key }
+        //                 },
+        //             ]
+        //         }).toArray();
+        //     res.send(result);
+        // });
+
 
         app.get('/itemName/:id', async (req, res) => {
             const id = req.params.id;
@@ -140,6 +155,13 @@ async function run() {
             const result = await bookingsCollection.insertOne(booking);
             res.send(result);
         });
+
+
+        app.get('/allBookings', async(req, res)=> {
+            const bookings = {};
+            const result = await bookingsCollection.find(bookings).toArray();
+            res.send(result);
+        })
 
         app.delete('/bookings/:id', async (req, res) => {
             const id = req.params.id;
