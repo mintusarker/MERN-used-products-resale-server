@@ -20,24 +20,22 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
 
 //jwt token function
-function verifyJWT(req, res, next) {
-    const authHeader = req.headers.authorization;
-    // console.log(authHeader)
-    if (!authHeader) {
-        return res.status(401).send('unauthorized access')
-    }
+// function verifyJWT(req, res, next) {
+//     const authHeader = req.headers.authorization;
+//     if (!authHeader) {
+//         return res.status(401).send('unauthorized access')
+//     }
 
-    const token = authHeader.split(' ')[1];
+//     const token = authHeader.split(' ')[1];
 
-    jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
-        if (err) {
-            // console.log(err)
-            return res.status(403).send({ message: 'forbidden access' })
-        }
-        req.decoded = decoded;
-        next();
-    })
-}
+//     jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+//         if (err) {
+//             return res.status(403).send({ message: 'forbidden access' })
+//         }
+//         req.decoded = decoded;
+//         next();
+//     })
+// }
 
 async function run() {
     try {
@@ -76,9 +74,9 @@ async function run() {
             const result = await itemCollection.find(query).project({ name: 1 }).toArray();
             res.send(result)
         });
-        
 
-         //search Api
+
+        //search Api
         //  app.get("/search/:key", async (req, res) => {
         //     let result = await laptopCategoryCollection.find(
         //         {
@@ -93,7 +91,16 @@ async function run() {
 
 
         app.get('/itemName/:id', async (req, res) => {
+
             const id = req.params.id;
+
+            console.log(id);
+            const allItem = {};
+            if (id == '10') {
+                const items = await itemCollection.find(allItem).toArray();
+                return res.send(items)
+
+            }
             const query = { category_id: id };
             const item = await itemCollection.find(query).toArray();
             res.send(item)
@@ -107,13 +114,6 @@ async function run() {
             const bookings = await itemCollection.find(query).toArray();
             res.send(bookings);
         });
-
-        // app.get('/itemName', async (req, res) => {
-        //     const id = req.params.category_id;
-        //     // const query = {_id: id}
-        //     const data = await itemCollection.find(id).toArray()
-        //     res.send(data)
-        // });
 
         app.post('/itemName', async (req, res) => {
             const item = req.body;
@@ -157,7 +157,7 @@ async function run() {
         });
 
 
-        app.get('/allBookings', async(req, res)=> {
+        app.get('/allBookings', async (req, res) => {
             const bookings = {};
             const result = await bookingsCollection.find(bookings).toArray();
             res.send(result);
@@ -229,7 +229,7 @@ async function run() {
 
         //users Account variant
         app.get('/user/buyers', async (req, res) => {
-            const option = {}
+            const option = {};
             // const query = { option }
             const options = await usersCollection.find({ option: "Buyers Account" }).toArray();
             res.send(options);
@@ -243,7 +243,7 @@ async function run() {
         });
 
         app.get('/user/sellers', async (req, res) => {
-            const option = {}
+            const option = {};
             // const query = { option }
             const options = await usersCollection.find({ option: "Seller Account" }).toArray();
             res.send(options);
@@ -253,27 +253,27 @@ async function run() {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) };
             const options = await usersCollection.deleteOne(filter);
-            res.send(options)
+            res.send(options);
         });
 
         //status update
         app.patch('/user/sellers/:id', async (req, res) => {
             const id = req.params.id;
             const status = req.body.status;
-            const query = { _id: ObjectId(id) }
+            const query = { _id: ObjectId(id) };
             const updatedDoc = {
                 $set: {
                     status: status
                 }
             }
             const result = await usersCollection.updateOne(query, updatedDoc);
-            res.send(result)
+            res.send(result);
         });
 
         //get seller email
         app.get('/user/sellers/:email', async (req, res) => {
             const email = req.params.email;
-            const query = { email }
+            const query = { email };
             const user = await usersCollection.findOne(query);
             res.send({ isSeller: user?.option === 'Seller Account' });
         });
@@ -281,7 +281,7 @@ async function run() {
         //get buyer email
         app.get('/user/buyers/:email', async (req, res) => {
             const email = req.params.email;
-            const query = { email }
+            const query = { email };
             const user = await usersCollection.findOne(query);
             res.send({ isBuyer: user?.option === 'Buyers Account' });
         })
@@ -321,7 +321,7 @@ async function run() {
         app.get('/users', async (req, res) => {
             const query = {};
             const users = await usersCollection.find(query).toArray();
-            res.send(users)
+            res.send(users);
         });
 
         //delete
@@ -335,7 +335,7 @@ async function run() {
         //make admin
         app.put('/users/admin/:id', async (req, res) => {
             const id = req.params.id;
-            const filter = { _id: ObjectId(id) }
+            const filter = { _id: ObjectId(id) };
             const options = { upsert: true };
             const updatedDoc = {
                 $set: {
@@ -348,23 +348,23 @@ async function run() {
 
         // advertise
         app.get('/advertise', async (req, res) => {
-            const query = {}
+            const query = {};
             const result = await advertiseCollection.find(query).toArray();
-            res.send(result)
+            res.send(result);
         });
 
         app.get('/advertised', async (req, res) => {
             const email = req.query.email;
-            const query = {email: email}
+            const query = { email: email };
             const result = await advertiseCollection.find(query).toArray();
-            res.send(result)
+            res.send(result);
         });
 
         app.post('/advertise', async (req, res) => {
             const advertise = req.body;
-            console.log(advertise)
-            const result = await advertiseCollection.insertOne(advertise)
-            res.send(result)
+            // console.log(advertise)
+            const result = await advertiseCollection.insertOne(advertise);
+            res.send(result);
         });
 
         app.delete('/advertise/:id', async (req, res) => {
@@ -376,7 +376,7 @@ async function run() {
 
         //report to admin
         app.get('/report', async (req, res) => {
-            const query = {}
+            const query = {};
             const result = await reportCollection.find(query).toArray();
             res.send(result);
         });
